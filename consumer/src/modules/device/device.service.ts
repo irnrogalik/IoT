@@ -1,22 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { ConsumerService } from '../consumer/consumer.service';
-import { SensorInfo } from './device.interface';
-import { ConsumerSubscribeTopics } from 'kafkajs';
+import { RedisService } from '../redis/redis.service';
+import { DeviceInfo } from './device.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DeviceService {
-  constructor(private consumerService: ConsumerService) {}
+  constructor(
+    private redisService: RedisService,
+    private configService: ConfigService,
+  ) {}
+  private tablePrefix = this.configService.get<string>('DEVICE_TABLE_PREFIX');
 
-  getDeviceInfo(topics: ConsumerSubscribeTopics) {
-    this.consumerService.consume(topics, {
-      eachMessage: async ({ message }) => {
-        const sensorInfo: SensorInfo = {
-          sensorType: message.key.toString(),
-          deviceInfo: JSON.parse(message.value.toString()),
-          timestamp: message.timestamp,
-        };
-        console.log(sensorInfo);
-      },
-    });
+  async saveDeviceInfo(deviceInfo: DeviceInfo): Promise<void> {
+    await this.redisService.save(
+      this.tablePrefix,
+      deviceInfo.deviceId,
+      JSON.stringify(deviceInfo),
+    );
+  }
+
+  async getDeviceInfoById(deviceId: string): Promise<string> {
+    return await this.redisService.get(this.tablePrefix, deviceId);
+  }
+
+  async getAllDeviceKeys(): Promise<any> {
+    return await this.redisService.getAllKeys(this.tablePrefix);
   }
 }

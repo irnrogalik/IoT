@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { DeviceService } from './device.service';
-import { ConsumerModule } from '../consumer/consumer.module';
+import { DeviceController } from './device.controller';
+import { RedisModule } from '../redis/redis.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ConsumerModule],
+  imports: [RedisModule, ConfigModule],
+  controllers: [DeviceController],
   exports: [DeviceService],
   providers: [DeviceService],
 })
