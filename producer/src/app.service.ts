@@ -25,7 +25,7 @@ export class AppService implements OnModuleInit, OnApplicationShutdown {
 
     setInterval(async () => {
       for (let i = 0; i < deviceNumber; i++) {
-        const deviceId = this.getRandomId();
+        const deviceId = this.getRandomId(10);
         this.sendMessage(topic, this.getInfoFromDevice(deviceId));
         console.log(`device info ${deviceId} has been sent`);
       }

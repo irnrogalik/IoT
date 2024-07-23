@@ -9,16 +9,21 @@ export class RedisRepository implements OnModuleDestroy {
     this.clientRedis.disconnect();
   }
 
-  async get(prefix: string, key: string): Promise<string | null> {
-    return this.clientRedis.get(`${prefix}:${key}`);
+  async get(prefix: string, key: string): Promise<string[]> {
+    return await this.clientRedis.lrange(`${prefix}:${key}`, 0, -1);
   }
 
   async set(prefix: string, key: string, value: string): Promise<void> {
-    await this.clientRedis.set(`${prefix}:${key}`, value);
+    await this.clientRedis.rpush(`${prefix}:${key}`, value);
   }
 
   async delete(prefix: string, key: string): Promise<void> {
     await this.clientRedis.del(`${prefix}:${key}`);
+  }
+
+  async flush(): Promise<void> {
+    const result = await this.clientRedis.flushall();
+    console.log('flush result', result);
   }
 
   async getAllKeys(prefix: string): Promise<any> {

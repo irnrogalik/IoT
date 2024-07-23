@@ -1,15 +1,16 @@
-import { Controller, OnModuleInit } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { EventPattern } from '@nestjs/microservices';
 import { DeviceInfo } from './device.interface';
 import { DeviceService } from './device.service';
+import { ConfigService } from '@nestjs/config';
 
-@Controller()
-export class DeviceController implements OnModuleInit {
-  constructor(private deviceService: DeviceService) {}
-
-  onModuleInit() {
-    this.getAllDeviceKeys();
-  }
+@Controller('device')
+export class DeviceController {
+  constructor(
+    private deviceService: DeviceService,
+    private configService: ConfigService,
+  ) {}
+  private tablePrefix = this.configService.get<string>('DEVICE_TABLE_PREFIX');
 
   @EventPattern('deviceInfo')
   async getDeviceInfo(data: any) {
@@ -21,15 +22,26 @@ export class DeviceController implements OnModuleInit {
       };
       console.log(`device id ${deviceInfo.deviceId}`);
       this.deviceService.saveDeviceInfo(deviceInfo);
-      const device = await this.deviceService.getDeviceInfoById(
-        deviceInfo.deviceId,
-      );
-      console.log(JSON.parse(device));
     }
   }
 
+  @Get()
   async getAllDeviceKeys() {
+    let result = [];
     const devices = await this.deviceService.getAllDeviceKeys();
-    console.log(devices);
+    if (devices) {
+      const keys = devices.map((d) => {
+        d = d.replace(`${this.tablePrefix}:`, '');
+        return d;
+      });
+      result = [...new Set(keys)];
+    }
+    return result;
+  }
+
+  @Get(':id')
+  async getInfoByKey(@Param('id') id: string) {
+    const info = await this.deviceService.getDeviceInfoById(id);
+    return JSON.stringify(info);
   }
 }

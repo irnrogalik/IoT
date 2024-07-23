@@ -19,11 +19,19 @@ export class DeviceService {
     );
   }
 
-  async getDeviceInfoById(deviceId: string): Promise<string> {
+  async getDeviceInfoById(deviceId: string): Promise<string[]> {
     return await this.redisService.get(this.tablePrefix, deviceId);
   }
 
   async getAllDeviceKeys(): Promise<any> {
     return await this.redisService.getAllKeys(this.tablePrefix);
+  }
+
+  async removeByKey(id): Promise<any> {
+    return await this.redisService.delete(this.tablePrefix, id);
+  }
+
+  async flush(): Promise<void> {
+    return await this.redisService.flush();
   }
 }

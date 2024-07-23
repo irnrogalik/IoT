@@ -9,11 +9,19 @@ export class RedisService {
     await this.redisRepository.set(prefix, id, value);
   }
 
-  async get(prefix: string, id: string): Promise<string> {
+  async get(prefix: string, id: string): Promise<string[]> {
     return await this.redisRepository.get(prefix, id);
+  }
+
+  async delete(prefix: string, id: string): Promise<void> {
+    await this.redisRepository.delete(prefix, id);
   }
 
   async getAllKeys(prefix: string): Promise<any> {
     return await this.redisRepository.getAllKeys(prefix);
+  }
+
+  async flush(): Promise<void> {
+    return await this.redisRepository.flush();
   }
 }
