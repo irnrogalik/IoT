@@ -1,6 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { EventPattern } from '@nestjs/microservices';
-import { DeviceInfo } from './device.interface';
 import { DeviceService } from './device.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -14,15 +13,9 @@ export class DeviceController {
 
   @EventPattern('deviceInfo')
   async getDeviceInfo(data: any) {
-    for (const d of data) {
-      const deviceInfo: DeviceInfo = {
-        deviceId: d.key,
-        sensorInfo: JSON.parse(d.value),
-        timestamp: d.timestamp,
-      };
-      console.log(`device id ${deviceInfo.deviceId}`);
-      this.deviceService.saveDeviceInfo(deviceInfo);
-    }
+    const deviceInfo = await this.deviceService.getDeviceInfo(data);
+    console.log(`device id ${deviceInfo.deviceId}`);
+    this.deviceService.saveDeviceInfo(deviceInfo);
   }
 
   @Get()

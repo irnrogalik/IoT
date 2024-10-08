@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "kafkaTopic",
+  "namespace": "kafka.topic",
+  "fields": [
+    {
+      "name": "key",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "value",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "timestamp",
+      "type": ["null", "string"], 
+      "default": null
+    }
+  ]
+}

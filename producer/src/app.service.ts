@@ -7,7 +7,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ClientKafka } from '@nestjs/microservices';
 import { Message } from 'kafkajs';
-
+import {
+  SchemaRegistry,
+  SchemaType,
+  readAVSCAsync,
+} from '@kafkajs/confluent-schema-registry';
 @Injectable()
 export class AppService implements OnModuleInit, OnApplicationShutdown {
   constructor(
@@ -20,13 +24,24 @@ export class AppService implements OnModuleInit, OnApplicationShutdown {
     const interval = this.configService.get<number>('INTERVAL');
     const topic = this.configService.get<string>('TOPIC_DEVICE_INFO');
 
+    const registry = new SchemaRegistry({ host: 'http://localhost:8081' });
+    const schema = await readAVSCAsync('./src/schema.avsc');
+    const { id } = await registry.register({
+      type: SchemaType.AVRO,
+      schema: JSON.stringify(schema),
+    });
+
     this.clientKafka.subscribeToResponseOf(topic);
     await this.clientKafka.connect();
 
     setInterval(async () => {
       for (let i = 0; i < deviceNumber; i++) {
         const deviceId = this.getRandomId(10);
-        this.sendMessage(topic, this.getInfoFromDevice(deviceId));
+        const deviceInfo = this.getInfoFromDevice(deviceId);
+        for (const info of deviceInfo) {
+          const encodedMessage = await registry.encode(id, info);
+          this.sendMessage(topic, encodedMessage);
+        }
         console.log(`device info ${deviceId} has been sent`);
       }
     }, interval);
@@ -36,7 +51,7 @@ export class AppService implements OnModuleInit, OnApplicationShutdown {
     await this.clientKafka.close();
   }
 
-  async sendMessage(topic: string, data: Message[]): Promise<void> {
+  async sendMessage(topic: string, data: Buffer): Promise<void> {
     this.clientKafka.emit(topic, data);
   }
 
